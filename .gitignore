@@ -33,3 +33,7 @@ bin/
 # Temporary files
 *.tmp
 *.bak
+
+# Embedded repositories (ffmpeg forks)
+docs/ffmpeg-webrtc/
+docs/ffmpeg_JL/
