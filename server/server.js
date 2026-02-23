@@ -11,29 +11,43 @@ const MEDIAMTX_API_HOST = process.env.MEDIAMTX_HOST || "localhost";
 const MEDIAMTX_API_PORT = 9997;
 const app = express();
 
+// Parsear JSON para peticiones POST/PATCH
+app.use(express.json());
+
 // Servir archivos estáticos desde la carpeta public
 app.use(express.static("public"));
 
 // Proxy para API de MediaMTX (evita problemas de CORS y autenticación)
-app.get("/api/mediamtx/*", (req, res) => {
+// Soporta GET, POST, PATCH
+app.all("/api/mediamtx/*", (req, res) => {
   const path = req.params[0]; // Captura todo después de /api/mediamtx/
+  const body = req.body ? JSON.stringify(req.body) : '';
   
   const options = {
     hostname: MEDIAMTX_API_HOST,
     port: MEDIAMTX_API_PORT,
     path: `/${path}`,
-    method: 'GET',
-    headers: { 'Accept': 'application/json' }
+    method: req.method,
+    headers: { 
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'Content-Length': Buffer.byteLength(body)
+    }
   };
   
   const proxyReq = http.request(options, (proxyRes) => {
     let data = '';
     proxyRes.on('data', chunk => data += chunk);
     proxyRes.on('end', () => {
+      res.status(proxyRes.statusCode);
       try {
-        res.json(JSON.parse(data));
+        if (data) {
+          res.json(JSON.parse(data));
+        } else {
+          res.end();
+        }
       } catch (e) {
-        res.status(500).json({ error: 'Error parsing response' });
+        res.send(data);
       }
     });
   });
@@ -43,6 +57,7 @@ app.get("/api/mediamtx/*", (req, res) => {
     res.status(500).json({ error: error.message });
   });
   
+  if (body) proxyReq.write(body);
   proxyReq.end();
 });
 

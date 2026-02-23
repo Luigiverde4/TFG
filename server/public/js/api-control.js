@@ -1,4 +1,4 @@
-const API_BASE = () => `http://${document.getElementById('apiServer').value}/v3`;
+const API_BASE = () => '/api/mediamtx/v3';
 
 // Navigation
 function showTab(tabName) {
