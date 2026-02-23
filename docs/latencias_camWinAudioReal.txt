@@ -1,0 +1,18 @@
+USB Camera (0ms)
+    ↓
+[-rtbufsize: 0-10ms acumulación]
+[-thread_queue_size 256: ~10ms en cola]
+    ↓
+Video encoder (x264)
+[-ref=1: minimal search buffer]
+[-no b-frames: sin reorder]
+    ↓
+Opus encoder 
+[-audio_buffer_size 20: +20ms]
+[-frame_duration 20: +20ms]
+[-max_delay 0: no buffering extra]
+    ↓
+WHIP output
+[-flush_packets: envío inmediato]
+    ↓
+MediaMTX (recibe)

@@ -1,0 +1,54 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: docker/node/Dockerfile
+    hostname: server
+    container_name: server
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: ./server
+        target: /home/app
+        read_only: false
+      - type: volume
+        source: node_modules_volume
+        target: /home/app/node_modules
+    depends_on:
+      - mediamtx
+    environment:
+      - NODE_ENV=development
+      - MEDIAMTX_HOST=mediamtx
+    networks:
+      - tfg-network
+    
+  mediamtx:
+    image: bluenviron/mediamtx:latest
+    container_name: mediamtx
+    restart: unless-stopped
+    ports:
+      - "1935:1935"      # RTMP
+      - "8554:8554"      # RTSP
+      - "8888:8888"      # HLS
+      - "8889:8889"      # WebRTC HTTP
+      - "8189:8189/udp"  # WebRTC ICE/UDP
+      - "9997:9997"      # API HTTP
+    volumes:
+      - type: bind
+        source: ./mediamtx/mediamtx.yml
+        target: /mediamtx.yml
+        read_only: false
+      - type: bind
+        source: ./recordings
+        target: /recordings
+    networks:
+      - tfg-network
+
+networks:
+  tfg-network:
+    driver: bridge
+
+volumes:
+  node_modules_volume:

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediaMTX WebRTC Player</title>
+    <link rel="stylesheet" href="../css/player.css" >
+</head>
+<body>
+    <div class="container">
+        <h1>🎥 MediaMTX WebRTC Player</h1>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="server">Servidor:</label>
+                <input type="text" id="server" value="localhost" placeholder="localhost o IP">
+            </div>
+
+            <div class="control-group">
+                <label for="streamName">Nombre del Stream:</label>
+                <input type="text" id="streamName" value="stream" placeholder="ej: stream, cam1">
+            </div>
+
+            <div class="control-group">
+                <label for="status">Estado:</label>
+                <span class="status disconnected" id="status">Desconectado</span>
+            </div>
+        </div>
+
+        <div class="buttons">
+            <button class="btn-play" onclick="startPlay()">▶ Reproducir</button>
+            <button class="btn-stop" id="stopBtn" onclick="stopPlay()" disabled>⬛ Detener</button>
+        </div>
+
+        <div class="video-container">
+            <video id="video" controls muted autoplay playsinline></video>
+        </div>
+
+        <div class="info">
+            <p><strong>WebRTC (WHEP):</strong> Puerto 8889 - Ultra baja latencia (~100-300ms)</p>
+        </div>
+    </div>
+    <script src="../js/player.js"></script>
+</body>
+</html>

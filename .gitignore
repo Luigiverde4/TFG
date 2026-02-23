@@ -1,0 +1,35 @@
+# Log files
+*.log
+
+# Node.js
+node_modules/
+package-lock.json
+
+# Python
+__pycache__/
+*.py[cod]
+.env
+venv/
+
+# Recordings and media files
+recordings/
+*.mp4
+*.mkv
+*.ts
+*.m3u8
+
+# IDE and OS
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+.DS_Store
+
+# Build outputs
+bin/
+*.exe
+*.dll
+
+# Temporary files
+*.tmp
+*.bak

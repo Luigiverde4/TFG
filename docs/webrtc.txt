@@ -1,0 +1,28 @@
+Videos en YT
+WebRTC Crash Course
+https://www.youtube.com/watch?v=FExZvpVvYxA
+
+Group calling architectures in WebRTC: MCU, SFU & P2P
+https://www.youtube.com/watch?v=d2N0d6CKrbk
+
+Video Conferencing With MediaSoup: How Does It Work?
+https://www.youtube.com/watch?v=_z1cjyAxcnc
+
+https://www.npmjs.com/package/mediasoup
+https://www.npmjs.com/package/mediasoup-client
+
+
+
+Tutoriales
+🤖 Ultra Low Latency Streaming | Raspberry Pi + Python + WebRTC + MediaMTX
+https://www.youtube.com/watch?v=gAqdztWVAuo
+
+
+
+
+MediaMTX
+Documentacion
+https://mediamtx.org/docs/kickoff/introduction
+
+Tuto Chino
+https://stable-learn.com/en/mediamtx-streaming-server/?utm_source=chatgpt.com
