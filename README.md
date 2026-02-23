@@ -214,7 +214,7 @@ El reproductor utiliza el protocolo **WHEP** (WebRTC-HTTP Egress Protocol) para 
 
 También puedes acceder directamente al stream via WHEP desde cualquier cliente compatible:
 ```
-http://<IP_SERVIDOR>:8889/<nombre_stream>/whep
+http://<IP_SERVIDOR>:8889/<nombre_stream>
 ```
 Ejemplo: `http://192.168.1.100:8889/whipLL/whep`
 
