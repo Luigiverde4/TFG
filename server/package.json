@@ -1,7 +1,7 @@
 {
   "name": "tfg-server",
   "version": "1.0.0",
-  "description": "Servidor para XC25",
+  "description": "Servidor para TFG WHIP Streaming",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
