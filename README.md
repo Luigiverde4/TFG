@@ -69,7 +69,7 @@ Este proyecto implementa un sistema completo de transmisión de vídeo con baja 
 
 ### Opcional
 - Python 3.8+ (para scripts PYWHIP)
-
+- Descargar el ffmpeg personalizado con openSSL y WHIP-  [(CLICK a wffmpeg)](https://1drv.ms/f/c/d02daa2df2a2a690/IgB3e318fCdvRr6S5Q1w_hRNAU3r8oo8cSc6gcB4LQObLE8?e=9UIHiV)
 ## Instalación
 
 ### 1. Clonar el repositorio
@@ -79,7 +79,18 @@ git clone https://github.com/Luigiverde4/TFG.git
 cd TFG
 ```
 
-### 2. Configurar MediaMTX (IMPORTANTE)
+
+### 2. Descargar el wffmpeg (Windows)
+
+Para emitir streams con WebRTC/WHIP desde Windows, necesitas una versión de FFmpeg compilada con soporte OpenSSL y WHIP:
+
+**[⬇️ Descargar wffmpeg](https://1drv.ms/f/c/d02daa2df2a2a690/IgB3e318fCdvRr6S5Q1w_hRNAU3r8oo8cSc6gcB4LQObLE8?e=9UIHiV)**
+
+Descomprime el archivo y añade la carpeta `bin` al PATH del sistema, o colócala en la raíz del proyecto.
+
+> **Nota**: Si prefieres compilar FFmpeg tú mismo, consulta `/docs/compilacion_todo_junto.md`
+
+### 3. Configurar MediaMTX (IMPORTANTE)
 
 Editar `mediamtx/mediamtx.yml` y configurar la IP de tu máquina para que los clientes WebRTC puedan conectarse:
 
@@ -99,7 +110,7 @@ ip addr show | grep inet
 
 > **Nota**: Esta configuración es necesaria para que los navegadores de otros dispositivos en la red local puedan reproducir el stream.
 
-### 3. Levantar los servicios
+### 4. Levantar los servicios
 
 ```bash
 docker compose up --build
@@ -110,7 +121,7 @@ Para ejecutar en segundo plano:
 docker compose up -d --build
 ```
 
-### 4. Verificar funcionamiento
+### 5. Verificar funcionamiento
 
 Acceder a las interfaces web:
 
