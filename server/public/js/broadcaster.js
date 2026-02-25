@@ -1,16 +1,26 @@
 // Elementos DOM
+
+// Info pantalla
 const statusEl = document.getElementById('status');
-const startBtn = document.getElementById('startBtn');
-const stopBtn = document.getElementById('stopBtn');
+const streamUrlEl = document.getElementById('streamUrl');
+const activePathsList = document.getElementById('activePathsList');
+
+// Inputs usuario
 const serverInput = document.getElementById('server');
 const endpointInput = document.getElementById('endpoint');
-const preview = document.getElementById('preview');
+
+// Media
 const videoSource = document.getElementById('videoSource');
 const audioSource = document.getElementById('audioSource');
 const resolution = document.getElementById('resolution');
-const streamUrlEl = document.getElementById('streamUrl');
+
+// Botones
+const startBtn = document.getElementById('startBtn');
+const stopBtn = document.getElementById('stopBtn');
+
+// Player
+const preview = document.getElementById('preview');
 const liveIndicator = document.getElementById('liveIndicator');
-const activePathsList = document.getElementById('activePathsList');
 
 // Variables globales
 let pc = null; // WebRTC PeerConnection
@@ -18,22 +28,21 @@ let localStream = null; // Stream local de la cámara/micrófono
 let whipSession = null; // URL para DELETE al finalizar
 let activePaths = []; // Paths activos en MediaMTX
 
-// Inicializar al cargar la página
-document.addEventListener('DOMContentLoaded', async () => {
-    await initializeDevices();
-    
-    // Intentar cargar configuración guardada
-    const savedServer = localStorage.getItem('broadcaster_server');
-    const savedEndpoint = localStorage.getItem('broadcaster_endpoint');
-    if (savedServer) serverInput.value = savedServer;
-    if (savedEndpoint) endpointInput.value = savedEndpoint;
-    
-    // Cargar paths activos
-    await refreshActivePaths();
-});
 
-// Consultar API de MediaMTX para obtener paths activos (usa proxy del servidor)
-async function refreshActivePaths() {
+// PATHS
+function ponerPathsActivos() {
+    // Mostrar paths activos
+    if (activePaths.length === 0) {
+        activePathsList.innerHTML = '<span class="empty">No hay streams activos</span>';
+        return;
+    }
+    
+    activePathsList.innerHTML = activePaths
+        .map(path => `<span class="path-tag">${path}</span>`)
+        .join('');
+}
+
+async function actualizarPathsActivos() {
     activePathsList.innerHTML = '<span class="loading">Cargando...</span>';
     
     try {
@@ -51,44 +60,68 @@ async function refreshActivePaths() {
                 .map(path => path.name);
         }
         
-        renderActivePaths();
+        ponerPathsActivos();
     } catch (error) {
         console.error('Error consultando API MediaMTX:', error);
         activePathsList.innerHTML = '<span class="error">No se pudo conectar a MediaMTX</span>';
     }
 }
 
-function renderActivePaths() {
-    if (activePaths.length === 0) {
-        activePathsList.innerHTML = '<span class="empty">No hay streams activos</span>';
-        return;
-    }
-    
-    activePathsList.innerHTML = activePaths
-        .map(path => `<span class="path-tag">${path}</span>`)
-        .join('');
-}
-
-function isPathActive(endpoint) {
+function esPathActivo(endpoint) {
+    // Comprueba si el endpoint deseado ya esta usandose
     return activePaths.includes(endpoint);
 }
 
-// Obtener lista de dispositivos de audio/video
-async function initializeDevices() {
+function ponerEndpoint(name) {
+    // Establecer endpoint desde botones rápidos
+    endpointInput.value = name;
+    endpointInput.focus();
+}
+
+// API MEDIAMTX  
+async function actualizarPathsActivos() {
+    // Consultar API de MediaMTX para obtener paths activos (usa proxy del servidor)
+    activePathsList.innerHTML = '<span class="loading">Cargando...</span>';
+    
+    try {
+        // Usar el proxy del servidor Node.js para evitar CORS y auth
+        const response = await fetch('/api/mediamtx/v3/paths/list');
+        if (!response.ok) throw new Error('API no disponible');
+        
+        const data = await response.json();
+        activePaths = [];
+        
+        // Filtrar paths que tienen readers o publishers activos
+        if (data.items && data.items.length > 0) {
+            activePaths = data.items
+                .filter(path => path.ready)
+                .map(path => path.name);
+        }
+        
+        ponerPathsActivos();
+    } catch (error) {
+        console.error('Error consultando API MediaMTX:', error);
+        activePathsList.innerHTML = '<span class="error">No se pudo conectar a MediaMTX</span>';
+    }
+}
+
+// DISPOSITIVOS AUDIO / VIDEO
+async function iniciarDispositivos() {
     try {
         // Solicitar permisos primero (necesario para obtener labels)
         const tempStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         tempStream.getTracks().forEach(track => track.stop());
         
-        await refreshDevices();
+        await actualizarDispositivos();
     } catch (error) {
         console.error('Error al inicializar dispositivos:', error);
         updateStatus('disconnected', 'Error: ' + error.message);
     }
 }
 
-async function refreshDevices() {
+async function actualizarDispositivos() {
     try {
+        // Coger lista de dispositivos
         const devices = await navigator.mediaDevices.enumerateDevices();
         
         // Limpiar selects
@@ -101,8 +134,11 @@ async function refreshDevices() {
             option.value = device.deviceId;
             option.text = device.label || `${device.kind} (${device.deviceId.slice(0, 8)}...)`;
             
+            // VIDEO
             if (device.kind === 'videoinput') {
                 videoSource.appendChild(option);
+            
+            // AUDIO
             } else if (device.kind === 'audioinput') {
                 audioSource.appendChild(option);
             }
@@ -120,22 +156,14 @@ async function refreshDevices() {
     }
 }
 
-// Actualizar estado visual
-function updateStatus(status, text) {
-    statusEl.className = `status ${status}`;
-    statusEl.textContent = text;
-}
-
-// Establecer endpoint desde botones rápidos
-function setEndpoint(name) {
-    endpointInput.value = name;
-    endpointInput.focus();
-}
-
-// Obtener stream local de la cámara/micrófono
-async function getLocalStream() {
+async function cogerStreamVideoAudioLocal() {
+    // Obtener stream local de la cámara/micrófono
+    // Coger resolucion
     const [width, height] = resolution.value.split('x').map(Number);
     
+    // Configurar constraints según selección del usuario
+    
+    // VIDEO
     const constraints = {
         video: {
             deviceId: videoSource.value ? { exact: videoSource.value } : undefined,
@@ -145,6 +173,7 @@ async function getLocalStream() {
         }
     };
     
+    // AUDIO
     // Añadir audio solo si no está desactivado
     if (audioSource.value !== 'none') {
         constraints.audio = {
@@ -159,8 +188,42 @@ async function getLocalStream() {
     return await navigator.mediaDevices.getUserMedia(constraints);
 }
 
-// Iniciar transmisión WHIP
+async function cambioDispositivo() {
+    // Comprobar que no estamos transmitiendo (no queremos interrumpir el stream activo)
+    if (localStream && !pc) {
+        try {
+            // Cogemos nuevo stream con el dispositivo seleccionado
+            const newStream = await cogerStreamVideoAudioLocal();
+            // Cambiazo
+            localStream.getTracks().forEach(track => track.stop());
+            localStream = newStream;
+            preview.srcObject = localStream;
+        } catch (e) {
+            console.error('Error cambiando cámara:', e);
+        }
+    }
+}
+
+async function visualizarPreview() {
+        if (!localStream && !pc) {
+        try {
+            localStream = await cogerStreamVideoAudioLocal();
+            preview.srcObject = localStream;
+        } catch (e) {
+            console.error('Error iniciando preview:', e);
+        }
+    }
+}
+// VISUALES UI
+function updateStatus(status, text) {
+    statusEl.className = `status ${status}`;
+    statusEl.textContent = text;
+}
+
+
+// BROADCASTING
 async function startBroadcast() {
+    // Iniciar transmisión
     const endpoint = endpointInput.value.trim();
     const server = serverInput.value.trim();
     
@@ -177,8 +240,8 @@ async function startBroadcast() {
     }
     
     // Verificar si el path ya está en uso
-    await refreshActivePaths();
-    if (isPathActive(endpoint)) {
+    await actualizarPathsActivos();
+    if (esPathActivo(endpoint)) {
         const continuar = confirm(`⚠️ El endpoint "${endpoint}" ya está en uso.\n\n¿Quieres continuar de todos modos? (Podría reemplazar el stream existente)`);
         if (!continuar) return;
     }
@@ -192,7 +255,7 @@ async function startBroadcast() {
     
     try {
         // Obtener stream local
-        localStream = await getLocalStream();
+        localStream = await cogerStreamVideoAudioLocal();
         preview.srcObject = localStream;
         
         // Crear PeerConnection
@@ -270,31 +333,11 @@ async function startBroadcast() {
         stopBroadcast();
     }
     // Esperar un momento para que MediaMTX registre el cambio
-    setTimeout(refreshActivePaths, 1000);
+    setTimeout(actualizarPathsActivos, 1000);
 }
 
-// Esperar a que se recopilen los candidatos ICE
-function waitForIceGathering(pc) {
-    return new Promise((resolve) => {
-        if (pc.iceGatheringState === 'complete') {
-            resolve();
-        } else {
-            const checkState = () => {
-                if (pc.iceGatheringState === 'complete') {
-                    pc.removeEventListener('icegatheringstatechange', checkState);
-                    resolve();
-                }
-            };
-            pc.addEventListener('icegatheringstatechange', checkState);
-            
-            // Timeout de seguridad (5 segundos)
-            setTimeout(resolve, 5000);
-        }
-    });
-}
-
-// Detener transmisión
 async function stopBroadcast() {
+    // Detener transmisión
     // Intentar cerrar sesión WHIP en el servidor
     if (whipSession) {
         try {
@@ -327,35 +370,50 @@ async function stopBroadcast() {
     
     console.log('Transmisión detenida');
     // Esperar un momento para que MediaMTX registre el cambio
-    setTimeout(refreshActivePaths, 1000);
+    setTimeout(actualizarPathsActivos, 1000);
 }
 
-// Manejar cambio de dispositivos
-videoSource.addEventListener('change', async () => {
-    if (localStream && !pc) {
-        // Solo actualizar preview si no estamos transmitiendo
-        try {
-            const newStream = await getLocalStream();
-            localStream.getTracks().forEach(track => track.stop());
-            localStream = newStream;
-            preview.srcObject = localStream;
-        } catch (e) {
-            console.error('Error cambiando cámara:', e);
+// Recopilar ICE candidates para SDP
+function waitForIceGathering(pc) {
+    return new Promise((resolve) => {
+        if (pc.iceGatheringState === 'complete') {
+            resolve();
+        } else {
+            const checkState = () => {
+                if (pc.iceGatheringState === 'complete') {
+                    pc.removeEventListener('icegatheringstatechange', checkState);
+                    resolve();
+                }
+            };
+            pc.addEventListener('icegatheringstatechange', checkState);
+            
+            // Timeout de seguridad (5 segundos)
+            setTimeout(resolve, 5000);
         }
-    }
+    });
+}
+
+
+// EVENTOS
+// Inicializar al cargar la página
+document.addEventListener('DOMContentLoaded', async () => {
+    await iniciarDispositivos();
+    
+    // Intentar cargar configuración guardada
+    const savedServer = localStorage.getItem('broadcaster_server');
+    const savedEndpoint = localStorage.getItem('broadcaster_endpoint');
+    if (savedServer) serverInput.value = savedServer;
+    if (savedEndpoint) endpointInput.value = savedEndpoint;
+    
+    // Cargar paths activos
+    await actualizarPathsActivos();
 });
+
+// Manejar cambio de dispositivos
+videoSource.addEventListener('change', cambioDispositivo);
 
 // Detectar cuando se conectan/desconectan dispositivos
-navigator.mediaDevices.addEventListener('devicechange', refreshDevices);
+navigator.mediaDevices.addEventListener('devicechange', actualizarDispositivos);
 
 // Previsualizar al hacer clic en el video
-preview.addEventListener('click', async () => {
-    if (!localStream && !pc) {
-        try {
-            localStream = await getLocalStream();
-            preview.srcObject = localStream;
-        } catch (e) {
-            console.error('Error iniciando preview:', e);
-        }
-    }
-});
+preview.addEventListener('click', visualizarPreview);
