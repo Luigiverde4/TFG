@@ -31,7 +31,7 @@ Este proyecto implementa un sistema completo de transmisión de vídeo con baja 
 │               │───►│  FFmpeg (Win)   │ ─────────────────► │  ┌─────────────┐    ┌───────────┐   │ ◄───────────────►  │    Browser      │
 │  Cámaras      │    │                 │                    │  │             │    │           │   │                    │                 │
 │               │───►│  FFmpeg (RPi)   │ ─────────────────► │  │  MediaMTX   │◄───│  Node.js  │   │◄── http://:80      │      OBS        │
-│  Micros       │    │                 │                    │  │  (8889)     │    │  Server   │   │                    │                 │
+│  Micros       │    │                 │                    │  │  (8889)     │    │  Server   │   │◄── https://:443    │                 │
 │               │───►│  Python/PYWHIP  │ ─────────────────► │  │             │    │           │   │                    │  Player.html    │
 │  Pantalla     │    │                 │                    │  │  API:9997 ◄─┼────│ /api/     │   │                    │                 │
 │               │───►│  Broadcaster    │ ─────────────────► │  │             │    │ mediamtx  │   │                    │      VLC        │
@@ -40,6 +40,8 @@ Este proyecto implementa un sistema completo de transmisión de vídeo con baja 
 ```
 
 > **Proxy API**: El servidor Node.js incluye un proxy en `/api/mediamtx/*` que redirige peticiones a la API REST de MediaMTX (puerto 9997), evitando problemas de CORS.
+>
+> **HTTPS**: El servidor soporta HTTPS (puerto 443) con certificados mkcert, necesario para usar `getUserMedia()` desde cualquier dispositivo que acceda por IP (no localhost).
 
 ### Flujo de datos
 
@@ -54,7 +56,7 @@ Este proyecto implementa un sistema completo de transmisión de vídeo con baja 
 - Docker Engine 20.10+
 - Docker Compose v2.0+
 - 2GB RAM mínimo
-- Puertos disponibles: 80, 1935, 8554, 8888, 8889, 8189/UDP, 9997
+- Puertos disponibles: 80, 443, 1935, 8554, 8888, 8889, 8189/UDP, 9997
 
 ### Para emisión desde Windows
 - FFmpeg compilado con soporte WebRTC/WHIP (ver `/docs/compilacion_todo_junto.md`)
@@ -108,7 +110,46 @@ ip addr show | grep inet
 
 > **Nota**: Esta configuración es necesaria para que los navegadores de otros dispositivos en la red local puedan reproducir el stream.
 
-### 4. Levantar los servicios
+### 4. Configurar HTTPS con mkcert (Recomendado para acceso por IP)
+
+Para usar el **Broadcaster desde cualquier dispositivo externo** (otro PC, móvil, tablet), es necesario HTTPS. Los navegadores requieren un contexto seguro (HTTPS) para acceder a `getUserMedia()` (cámara/micrófono) cuando se accede por IP.
+
+> **localhost funciona sin HTTPS**, pero cualquier acceso por IP (192.168.x.x, etc.) requiere HTTPS.
+
+#### Instalar mkcert
+
+```bash
+# Windows (con Chocolatey)
+choco install mkcert
+
+# Windows (con Scoop)
+scoop install mkcert
+
+# macOS
+brew install mkcert
+
+# Linux (Debian/Ubuntu)
+sudo apt install mkcert
+```
+
+#### Generar certificados
+
+```bash
+# Instalar CA local (solo la primera vez)
+mkcert -install
+
+# Generar certificados para localhost y tu IP
+cd server
+mkcert localhost 127.0.0.1 192.168.X.X  # Cambiar por tu IP
+
+# Renombrar los archivos generados
+mv localhost+2.pem cert.pem
+mv localhost+2-key.pem key.pem
+```
+
+> **Nota**: Los certificados deben estar en la carpeta `server/` con los nombres `cert.pem` y `key.pem`. Si no se encuentran, el servidor funcionará solo con HTTP.
+
+### 5. Levantar los servicios
 
 ```bash
 docker compose up --build
@@ -119,17 +160,19 @@ Para ejecutar en segundo plano:
 docker compose up -d --build
 ```
 
-### 5. Verificar funcionamiento
+### 6. Verificar funcionamiento
 
 Acceder a las interfaces web:
 
 | Interfaz | URL | Descripción |
 |----------|-----|-------------|
 | **Index** | http://localhost/ | Página principal con acceso a todas las herramientas |
-| **Broadcaster** | http://localhost/broadcaster.html | Emitir stream desde el navegador (cámara/micrófono) |
+| **Broadcaster** | https://localhost/broadcaster.html | Emitir stream desde el navegador (cámara/micrófono) |
 | **Player** | http://localhost/player.html | Reproductor WebRTC principal |
 | **Playback** | http://localhost/playback.html | Reproductor con controles avanzados |
 | **API Control** | http://localhost/api-control.html | Panel de control de la API |
+
+> **Acceso por IP**: Para usar el Broadcaster desde otros dispositivos, usar `https://<IP_SERVIDOR>/broadcaster.html`. HTTPS es obligatorio para acceder a la cámara cuando no es localhost.
 
 ## Estructura del Proyecto
 
@@ -202,13 +245,15 @@ chmod +x stream_mjpeg_high.sh
 
 El Broadcaster permite emitir directamente desde cualquier dispositivo con navegador (PC, móvil, tablet):
 
-1. Abrir http://localhost/broadcaster.html
+1. Abrir http://localhost/broadcaster.html (o `https://<IP>` si accedes por IP)
 2. Seleccionar la cámara y micrófono a usar
 3. Elegir la resolución deseada 
 4. Introducir un nombre para el endpoint (ej: `cam1`, `movil`)
 5. Hacer clic en **🔴 Iniciar Transmisión**
 
 > **Nota**: El Broadcaster utiliza el protocolo WHIP nativo del navegador para enviar el stream a MediaMTX, igual que FFmpeg pero sin necesidad de instalar software adicional.
+>
+> **Acceso por IP**: Requiere HTTPS para acceder a la cámara. Usa `https://<IP>/broadcaster.html` con certificados mkcert. Desde `localhost` funciona sin HTTPS.
 
 ### Reproducir el stream (WHEP)
 
@@ -237,6 +282,7 @@ Ejemplo: `http://192.168.1.100:8889/whipLL`
 | Puerto | Protocolo | Descripción | Latencia |
 |--------|-----------|-------------|----------|
 | **80** | HTTP | Servidor web (interfaz) | - |
+| **443** | HTTPS | Servidor web seguro (requerido para getUserMedia por IP) | - |
 | **1935** | RTMP | Streaming RTMP | ~2-5s |
 | **8554** | RTSP | Streaming RTSP | ~1-2s |
 | **8888** | HTTP | HLS (HTTP Live Streaming) | ~6-30s |
