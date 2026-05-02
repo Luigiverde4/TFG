@@ -148,7 +148,6 @@ video {
     width: 100%;
     height: auto;
     display: block;
-    transform: scaleX(-1); /* Espejo para verse natural */
 }
 
 .live-indicator {
@@ -358,7 +357,4 @@ video {
         padding: 6px;
     }
     
-    video {
-        transform: scaleX(-1);
-    }
 }

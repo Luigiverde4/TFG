@@ -386,6 +386,8 @@ function actualizarEstado(status, text) {
  * Muestra la previsualización local cuando aún no existe stream activo.
  */
 async function visualizarPreview() {
+    if (pc) return; // no tocar preview si hay emisión activa
+
     if (!localStream && !pc) {
         try {
             localStream = await cogerStreamVideoAudioLocal();
