@@ -11,5 +11,5 @@ wffmpeg -re ^
   -c:v libx264 -pix_fmt yuv420p ^
   -preset ultrafast -b:v 600k -tune zerolatency -profile:v baseline -level 3.1 -g 60 -keyint_min 60 -bf 0 -x264-params "repeat-headers=1" ^
   -c:a libopus -ar 48000 -ac 2 -b:a 128k ^
-  -handshake_timeout 5000 ^
+  -handshake_timeout 15000 ^
   -f whip https://%HOST%:%PORT%/%STREAM%/whip
