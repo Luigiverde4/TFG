@@ -124,7 +124,7 @@ function playFromOffset() {
             alert('El offset es mayor que la duración de la grabación');
             return;
         }
-    } else {
+    } else if (mode === 'lookback') {
         let lookbackSeconds = parseFloat(lookbackTimeInput.value) || 60;
         let now = new Date();
         let recordingStart = new Date(selectedRecording.start);
@@ -159,6 +159,57 @@ function playFromOffset() {
                 return;
             }
         }
+    } else if (mode === 'specific') {
+        // Modo specific: acepta HH:MM o HH:MM:SS
+        let timeValue = specificTimeInput.value.trim();
+        if (!timeValue) {
+            alert('Por favor, introduce una hora en formato HH:MM o HH:MM:SS');
+            return;
+        }
+
+        // Validar formato HH:MM[:SS]
+        let match = timeValue.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+        if (!match) {
+            alert('Formato inválido. Usa HH:MM o HH:MM:SS');
+            return;
+        }
+
+        let hh = parseInt(match[1], 10);
+        let mm = parseInt(match[2], 10);
+        let ss = match[3] ? parseInt(match[3], 10) : 0;
+        
+        // Validar rango de horas/minutos/segundos
+        if (hh < 0 || hh > 23 || mm < 0 || mm > 59 || ss < 0 || ss > 59) {
+            alert('Hora inválida');
+            return;
+        }
+
+        let recordingStart = new Date(selectedRecording.start);
+        let recordingEnd = new Date(recordingStart.getTime() + selectedRecording.duration * 1000);
+
+        // Construir la hora específica en la misma fecha que la grabación
+        let specificDate = new Date(recordingStart);
+        specificDate.setHours(hh, mm, ss, 0);
+
+        // Validar que la hora esté dentro del rango de la grabación
+        if (specificDate < recordingStart) {
+            alert('El tiempo solicitado está antes del inicio de la grabación');
+            return;
+        }
+
+        if (specificDate > recordingEnd) {
+            alert('El tiempo solicitado está más allá del final de la grabación');
+            return;
+        }
+
+        // Calcular offset y duración desde ese punto
+        offset = (specificDate.getTime() - recordingStart.getTime()) / 1000;
+        newDuration = (recordingEnd.getTime() - specificDate.getTime()) / 1000;
+
+        if (newDuration <= 0) {
+            alert('No hay contenido disponible desde ese punto');
+            return;
+        }
     }
 
     if (newDuration <= 0) {
@@ -166,9 +217,24 @@ function playFromOffset() {
         return;
     }
 
-    let playURL = construirUrlProxyPlayback(selectedRecording.url);
+    // Calcular el nuevo timestamp de inicio (start) basado en el offset
+    let recordingStartDate = new Date(selectedRecording.start);
+    let newStartDate = new Date(recordingStartDate.getTime() + offset * 1000);
+    let newStartISO = newStartDate.toISOString();
+
+    // Construir URL con los parámetros recalculados
+    // Nota: Si hay offset, siempre construimos manualmente para garantizar los parámetros correctos
+    let playURL;
+    if (offset === 0 && newDuration === selectedRecording.duration) {
+        // Reproducción desde el inicio sin cambios: podemos usar la URL original
+        playURL = construirUrlProxyPlayback(selectedRecording.url);
+    } else {
+        // Hay offset o cambio de duración: construir manualmente con nuevos parámetros
+        playURL = null;
+    }
+
     if (!playURL) {
-        playURL = `/api/playback/get?duration=${encodeURIComponent(selectedRecording.duration)}&path=${encodeURIComponent(selectedRecording.stream)}&start=${encodeURIComponent(selectedRecording.startISO)}`;
+        playURL = `/api/playback/get?duration=${encodeURIComponent(newDuration)}&path=${encodeURIComponent(selectedRecording.stream)}&start=${encodeURIComponent(newStartISO)}`;
     }
 
     console.log('Modo:', mode);
@@ -219,6 +285,8 @@ function playFromOffset() {
     } else if (mode === 'lookback') {
         let lookback = parseFloat(lookbackTimeInput.value) || 60;
         offsetText = ` (últimos ${lookback}s)`;
+    } else if (mode === 'specific') {
+        offsetText = ` (desde ${specificTimeInput.value})`;
     }
     currentRecordingEl.textContent = `${selectedRecording.stream} - ${formatDate(originalStart)}${offsetText}`;
 }

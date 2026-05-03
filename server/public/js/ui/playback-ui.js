@@ -15,6 +15,8 @@ let recordingsListEl = document.getElementById('recordingsList');
 let streamFilterEl = document.getElementById('streamFilter');
 let startOffsetInput = document.getElementById('startOffset');
 let lookbackTimeInput = document.getElementById('lookbackTime');
+let specificControls = document.getElementById('specificControls');
+let specificTimeInput = document.getElementById('specificTime');
 let timelineSlider = document.getElementById('timelineSlider');
 let timelineStart = document.getElementById('timelineStart');
 let timelineEnd = document.getElementById('timelineEnd');
@@ -40,9 +42,15 @@ function actualizarModoPlayback() {
     if (mode === 'offset') {
         offsetControls.style.display = 'flex';
         lookbackControls.style.display = 'none';
-    } else {
+        specificControls.style.display = 'none';
+    } else if (mode === 'lookback') {
         offsetControls.style.display = 'none';
         lookbackControls.style.display = 'flex';
+        specificControls.style.display = 'none';
+    } else if (mode === 'specific') {
+        offsetControls.style.display = 'none';
+        lookbackControls.style.display = 'none';
+        specificControls.style.display = 'flex';
     }
 }
 

@@ -63,6 +63,10 @@
                                 <input type="radio" name="playbackMode" value="lookback" onchange="actualizarModoPlayback()">
                                 Hacia atrás desde ahora
                             </label>
+                            <label class="radio-label">
+                                <input type="radio" name="playbackMode" value="specific" onchange="actualizarModoPlayback()">
+                                Hora específica (HH:MM:SS)
+                            </label>
                         </div>
                     </div>
                     
@@ -76,6 +80,11 @@
                         <label for="lookbackTime">Mirar hacia atrás:</label>
                         <input type="number" id="lookbackTime" min="1" value="60" step="1" placeholder="60">
                         <span class="time-unit">segundos (ej: 300 = últimos 5 min)</span>
+                    </div>
+                
+                    <div class="time-control-group" id="specificControls" style="display: none;">
+                        <label for="specificTime">Hora específica:</label>
+                        <input type="text" id="specificTime" value="00:00:00" placeholder="HH:MM:SS">
                     </div>
                     
                     <button class="btn-play-from" onclick="playFromOffset()">▶ Reproducir desde tiempo seleccionado</button>
@@ -115,6 +124,7 @@
             <p><strong>Formato:</strong> fMP4 (Fragmented MP4)</p>
             <p><strong>💡 Modo "Desde el inicio":</strong> Reproduce desde un punto específico (ej: segundo 120)</p>
             <p><strong>💡 Modo "Hacia atrás desde ahora":</strong> Reproduce los últimos N segundos hasta ahora (ej: últimos 300s = últimos 5 min)</p>
+            <p><strong>💡 Modo "Hora específica":</strong> Reproduce desde una hora concreta del día (ej: 19:17:30)</p>
         </div>
     </div>
 
