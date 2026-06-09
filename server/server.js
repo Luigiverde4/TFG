@@ -62,9 +62,6 @@ if (httpsServer) {
 
 // Para cerrar el docker gracefully (SIGTERM)
 process.on("SIGTERM", () => {
-  io.close(() => {
-    console.log("HANGING UP...");
-  });
   httpServer.close(() => {
     console.log("CLOSING HTTP...");
   });

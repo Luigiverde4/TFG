@@ -18,7 +18,7 @@ app.use("/vendor", express.static(path.join(__dirname, "..", "node_modules")));
 
 // Index home
 app.get("/", (req, res) => {
-  res.sendFile(__dirname + "/public/index.html");
+  res.sendFile(path.join(__dirname, "..", "public", "index.html"));
 });
 
 
@@ -26,16 +26,16 @@ app.get("/", (req, res) => {
 // (evita problemas de CORS y autenticación)
 app.all("/api/mediamtx/*", (req, res) => {
   // Soporta GET, POST, PATCH, DELETE, etc. Captura todo después de /api/mediamtx/
-  const path = req.params[0]; // Captura todo después de /api/mediamtx/
+  const apiPath = req.params[0]; // Captura todo después de /api/mediamtx/
   const body = req.body ? JSON.stringify(req.body) : '';
   const queryIndex = req.originalUrl.indexOf('?');
   const query = queryIndex >= 0 ? req.originalUrl.slice(queryIndex) : '';
-  
+
   // Preparar el payload
   const options = {
     hostname: MEDIAMTX_API_HOST,
     port: MEDIAMTX_API_PORT,
-    path: `/${path}${query}`,
+    path: `/${apiPath}${query}`,
     method: req.method,
     headers: { 
       'Accept': 'application/json',
@@ -75,7 +75,7 @@ app.all("/api/mediamtx/*", (req, res) => {
 
 // PROXY Playback API (puerto 9996)
 app.all("/api/playback/*", (req, res) => {
-  const path = req.params[0];
+  const apiPath = req.params[0];
   const body = req.body ? JSON.stringify(req.body) : '';
   const queryIndex = req.originalUrl.indexOf('?');
   const query = queryIndex >= 0 ? req.originalUrl.slice(queryIndex) : '';
@@ -83,7 +83,7 @@ app.all("/api/playback/*", (req, res) => {
   const options = {
     hostname: PLAYBACK_API_HOST,
     port: PLAYBACK_API_PORT,
-    path: `/${path}${query}`,
+    path: `/${apiPath}${query}`,
     method: req.method,
     headers: {
       'Content-Length': Buffer.byteLength(body)
