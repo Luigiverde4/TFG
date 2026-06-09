@@ -1,0 +1,38 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/28.1.2 Chrome/138.0.7204.243 Electron/37.4.0 Safari/537.36" version="28.1.2">
+  <diagram name="Page-1" id="xaUtIqYHG7dDH2CpyTqU">
+    <mxGraphModel dx="496" dy="298" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="LUjR3HfRE5i7liASUKb1-29" value="Flujo" style="whiteSpace=wrap;html=1;aspect=fixed;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+          <mxGeometry x="204" y="60" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="LUjR3HfRE5i7liASUKb1-30" value="Transporte" style="whiteSpace=wrap;html=1;aspect=fixed;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+          <mxGeometry x="445" y="60" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="zGzxS0UpYSpA-dZ0puWK-3" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.988;exitY=0.941;exitDx=0;exitDy=0;entryX=-0.024;entryY=0.941;entryDx=0;entryDy=0;exitPerimeter=0;entryPerimeter=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="285" y="89.8" as="sourcePoint" />
+            <mxPoint x="444" y="89.8" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="zGzxS0UpYSpA-dZ0puWK-9" value="Stream codificado" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="zGzxS0UpYSpA-dZ0puWK-3">
+          <mxGeometry x="-0.4222" relative="1" as="geometry">
+            <mxPoint x="29" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="zGzxS0UpYSpA-dZ0puWK-5" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.988;exitY=0.941;exitDx=0;exitDy=0;entryX=-0.024;entryY=0.941;entryDx=0;entryDy=0;exitPerimeter=0;entryPerimeter=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="285" y="109.8" as="sourcePoint" />
+            <mxPoint x="444" y="109.8" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="zGzxS0UpYSpA-dZ0puWK-10" value="Bitrate, GOP, Resolución" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="zGzxS0UpYSpA-dZ0puWK-5">
+          <mxGeometry x="-0.2587" y="1" relative="1" as="geometry">
+            <mxPoint x="16" as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
