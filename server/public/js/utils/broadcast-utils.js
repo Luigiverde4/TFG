@@ -60,8 +60,8 @@ async function cogerStreamVideoAudioLocal() {
                 height: { strict: height },
                 frameRate: { strict: 30 }
             }
-    }
-    }else {
+        };
+    } else {
         constraints = {
             video: {
                 deviceId: videoSource.value ? { exact: videoSource.value } : undefined,
@@ -69,8 +69,8 @@ async function cogerStreamVideoAudioLocal() {
                 height: { ideal: height },
                 frameRate: { ideal: 30 }
             }
+        };
     }
-    };
     console.log('Solicitando stream con constraints:', constraints);
     if (audioSource.value !== 'none') {
         constraints.audio = {

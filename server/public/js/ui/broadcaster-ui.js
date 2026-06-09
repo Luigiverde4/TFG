@@ -321,7 +321,7 @@ function ponerPathsActivos() {
     }
 
     activePathsList.innerHTML = activePaths
-        .map(path => `<span class="path-tag">${path}</span>`)
+        .map(path => `<span class="path-tag">${escapeHtml(path)}</span>`)
         .join('');
 }
 
@@ -388,7 +388,7 @@ function actualizarEstado(status, text) {
 async function visualizarPreview() {
     if (pc) return; // no tocar preview si hay emisión activa
 
-    if (!localStream && !pc) {
+    if (!localStream) {
         try {
             localStream = await cogerStreamVideoAudioLocal();
             preview.srcObject = localStream;
