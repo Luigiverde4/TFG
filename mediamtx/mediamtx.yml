@@ -1,4 +1,4 @@
-logLevel: debug
+logLevel: info
 logDestinations: [stdout]
 logStructured: no
 logFile: mediamtx.log
@@ -196,6 +196,7 @@ webrtcIPsFromInterfacesList: []
 # webrtcAdditionalHosts: ['192.168.1.120']
 # webrtcAdditionalHosts: ['10.151.165.147']
 webrtcAdditionalHosts: ['192.168.1.82']
+# webrtcAdditionalHosts: ['192.168.1.48']
 # webrtcAdditionalHosts: ['192.168.1.82', '127.0.0.1']
 
 
