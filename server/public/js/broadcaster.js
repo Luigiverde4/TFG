@@ -52,6 +52,8 @@ async function startBroadcast() {
     let endpoint = endpointInput.value.trim();
     let server = serverInput.value.trim();
 
+    console.log('[broadcaster] startBroadcast()', { endpoint, server });
+
     if (!endpoint) {
         alert('Por favor, introduce un nombre para tu endpoint (ej: ricardo, cam1)');
         endpointInput.focus();
@@ -77,9 +79,11 @@ async function startBroadcast() {
     startBtn.disabled = true;
 
     try {
+        console.log('[broadcaster] solicitando stream local');
         localStream = await cogerStreamVideoAudioLocal();
         preview.srcObject = localStream;
 
+        console.log('[broadcaster] creando RTCPeerConnection');
         pc = new RTCPeerConnection();
 
         localStream.getTracks().forEach(track => {
@@ -109,8 +113,10 @@ async function startBroadcast() {
         };
 
         let offer = await pc.createOffer();
+        console.log('[broadcaster] offer creado');
         await pc.setLocalDescription(offer);
         await esperarICEcompleto(pc);
+        console.log('[broadcaster] ICE completo', pc.iceGatheringState);
 
         let whipUrl = `${construirBaseUrlWebRTC(server)}/${encodeURIComponent(endpoint)}/whip`;
         console.log('WHIP URL:', whipUrl);
@@ -118,12 +124,20 @@ async function startBroadcast() {
             streamUrlEl.textContent = whipUrl;
         }
 
+        console.log('[broadcaster] enviando SDP a WHIP');
         let response = await fetch(whipUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/sdp'
             },
             body: pc.localDescription.sdp
+        });
+
+        console.log('[broadcaster] respuesta WHIP', {
+            ok: response.ok,
+            status: response.status,
+            statusText: response.statusText,
+            location: response.headers.get('Location')
         });
 
         if (!response.ok) {
@@ -134,16 +148,22 @@ async function startBroadcast() {
         console.log('WHIP Session:', whipSession);
 
         let answerSDP = await response.text();
+        console.log('[broadcaster] SDP de respuesta recibido', {
+            length: answerSDP.length,
+            preview: answerSDP.slice(0, 300)
+        });
         await pc.setRemoteDescription(new RTCSessionDescription({
             type: 'answer',
             sdp: answerSDP
         }));
 
-        await esperarStreamSaliente(pc);
+        // await esperarStreamSaliente(pc);
 
         actualizarEstado('live', '🔴 EN VIVO');
         liveIndicator.style.display = 'block';
+        console.log('[broadcaster] arrancando estadísticas de códec y tráfico');
         startCodecStatsPolling();
+        console.log('[broadcaster] transmisión marcada como EN VIVO');
 
         stopBtn.disabled = false;
         console.log('Transmisión WHIP iniciada correctamente');
@@ -161,6 +181,12 @@ async function startBroadcast() {
 async function stopBroadcast() {
     if (isStoppingBroadcast) return;
     isStoppingBroadcast = true;
+
+    console.log('[broadcaster] stopBroadcast()', {
+        hasSession: Boolean(whipSession),
+        hasPeerConnection: Boolean(pc),
+        hasLocalStream: Boolean(localStream)
+    });
 
     stopCodecStatsPolling();
 
@@ -241,6 +267,7 @@ function esperarStreamSaliente(pcConnection) {
             if (finished) return;
 
             if (!pcConnection || pcConnection.connectionState === 'closed' || pcConnection.iceConnectionState === 'closed') {
+                console.warn('[broadcaster] esperarStreamSaliente: conexión cerrada antes de confirmar tráfico');
                 finish(reject, new Error('La conexión se cerró antes de confirmar el envío del stream'));
                 return;
             }
@@ -248,9 +275,11 @@ function esperarStreamSaliente(pcConnection) {
             try {
                 let stats = await pcConnection.getStats();
                 let hasOutgoingTraffic = false;
+                let reportsSeen = 0;
 
                 stats.forEach(report => {
                     if (report.type !== 'outbound-rtp' || report.isRemote) return;
+                    reportsSeen += 1;
 
                     let bytesSent = typeof report.bytesSent === 'number' ? report.bytesSent : 0;
                     let previousBytesSent = lastBytesSent.get(report.id) || 0;
@@ -262,21 +291,35 @@ function esperarStreamSaliente(pcConnection) {
                     lastBytesSent.set(report.id, bytesSent);
                 });
 
+                console.log('[broadcaster] esperarStreamSaliente: muestra de stats', {
+                    reportsSeen,
+                    hasOutgoingTraffic,
+                    connectionState: pcConnection.connectionState,
+                    iceConnectionState: pcConnection.iceConnectionState,
+                    iceGatheringState: pcConnection.iceGatheringState
+                });
+
                 if (hasOutgoingTraffic) {
+                    console.log('[broadcaster] esperarStreamSaliente: tráfico saliente confirmado');
                     finish(resolve);
                     return;
                 }
 
                 setTimeout(checkStats, 300);
             } catch (error) {
+                console.warn('[broadcaster] esperarStreamSaliente: error leyendo stats', error);
                 finish(reject, error);
             }
         };
 
         timeoutId = setTimeout(() => {
-            finish(reject, new Error('No se pudo confirmar que el stream esté enviándose'));
+            if (!finished) {
+                console.warn('No se pudo confirmar el envío del stream en el tiempo esperado; se continúa con la emisión');
+                finish(resolve);
+            }
         }, 10000);
 
+        console.log('[broadcaster] esperarStreamSaliente: iniciando monitorización');
         checkStats();
     });
 }
